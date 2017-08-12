@@ -1,6 +1,8 @@
 class Quadruple
 
   def initialize
+    @letters = ['A','B','C','D','E','F','G','H']
+    @feedback = ""
     @score = 0
     @field = [
       [" "," "," "," "," "],
@@ -27,20 +29,93 @@ class Quadruple
   end
 
   def update(move)
+    @feedback = ""
     @score += 1
 
-    count = empty_field_positions
-    if count <= 5
-      next_up = generate_next_up(count)
-      seed_field(next_up)
-      return "gameover"
-    else
+    begin
+
+      validate(move)
+
+      r, c = from(move)
+      digit = get_digit(r, c)
+
+      r, c = to(move)
+      @field[r][c] = digit
+
       seed_field(generate_next_up)
+
+    rescue Exception => e
+      @feedback = e.message
     end
+  end
+
+  def validate(move)
+    validate_first_coord(move[0..1])
+    validate_second_coord(move[2..3])
+  end
+
+  def validate_first_coord(first_coord)
+    if valid(first_coord)
+      r, c = coordinates(first_coord)
+      if @field[r][c] != " "
+        return true
+      else
+        raise "No digit to select at first coordinate."
+      end
+    else
+      raise "First corrdinate is invalid."
+    end
+  end
+
+  def validate_second_coord(second_coord)
+    if valid(second_coord)
+      r, c = coordinates(second_coord)
+      if @field[r][c] == " "
+        return true
+      else
+        raise "Cell is occupied at second coordinate."
+      end
+    else
+      raise "Second corrdinate is invalid."
+    end
+  end
+
+  def from(move)
+    coordinates(move[0..1])
+  end
+
+  def to(move)
+    coordinates(move[2..3])
+  end
+
+  def get_digit(r, c)
+    digit = @field[r][c]
+    @field[r][c] = " "
+    digit
+  end
+
+  def put_digit(r, c)
 
   end
 
+  def coordinates(move)
+    row = @letters.index(move[0])
+    col = move[1].to_i - 1
+    [row, col]
+  end
+
   def seed_field(next_up)
+    count = empty_field_positions
+    if count <= 5
+      next_up = generate_next_up(count)
+      seed(next_up)
+      return "gameover"
+    else
+      seed(generate_next_up)
+    end
+  end
+
+  def seed(next_up)
     row, col = 0
     next_up.each { |digit|
       loop do
@@ -54,7 +129,6 @@ class Quadruple
 
   def draw
     next_up = generate_next_up
-    letters = ['A','B','C','D','E','F','G','H']
     puts
     puts "Score: #{@score}"
     puts "Next up: #{next_up.join(", ")}"
@@ -62,10 +136,11 @@ class Quadruple
     puts "  1 2 3 4 5 "
     @field.each_with_index { |row, index|
       puts " +-+-+-+-+-+"
-      puts "#{letters[index]}|#{row.join("|")}|"
+      puts "#{@letters[index]}|#{row.join("|")}|"
     }
     puts " +-+-+-+-+-+"
     puts
+    puts @feedback
   end
 
   def generate_next_up(n=3)
@@ -80,5 +155,13 @@ class Quadruple
       count += row.join('').count(" ")
     }
     count
+  end
+
+  def valid(move)
+    is_valid = false
+    if @letters.include? move[0] and move[1].to_i.between?(1, 5)
+      is_valid = true
+    end
+    is_valid
   end
 end
