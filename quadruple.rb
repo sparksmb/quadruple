@@ -1,4 +1,5 @@
 require "./lib.rb"
+require "colorize"
 
 move = ""
 move_count = 0

@@ -133,14 +133,34 @@ class Quadruple
     puts "Score: #{@score}"
     puts "Next up: #{next_up.join(", ")}"
     puts
-    puts "  1 2 3 4 5 "
+    puts "  1 2 3 4 5 ".light_black
     @field.each_with_index { |row, index|
-      puts " +-+-+-+-+-+"
-      puts "#{@letters[index]}|#{row.join("|")}|"
+      puts " +-+-+-+-+-+".light_black
+      print @letters[index].light_black
+      print "|".light_black
+      row.each{ |digit|
+        print_digit(digit)
+        print "|".light_black
+      }
+      puts
     }
-    puts " +-+-+-+-+-+"
+    puts " +-+-+-+-+-+".light_black
     puts
     puts @feedback
+  end
+
+  def print_digit(digit)
+    if digit.to_s == "1"
+      print digit.to_s.yellow
+    elsif digit.to_s == "2"
+      print digit.to_s.blue
+    elsif digit.to_s == "4"
+      print digit.to_s.green
+    elsif digit.to_s == "8"
+      print digit.to_s.red
+    else
+      print digit.to_s
+    end
   end
 
   def generate_next_up(n=3)
