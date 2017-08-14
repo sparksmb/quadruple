@@ -1,5 +1,6 @@
 require "./lib.rb"
 require "colorize"
+require "awesome_print"
 
 move = ""
 move_count = 0

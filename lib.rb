@@ -1,13 +1,14 @@
 class Quadruple
 
   def initialize
+    @cell_width = 1
     @letters = ['A','B','C','D','E','F','G','H']
     @feedback = ""
     @score = 0
     @field = [
-      [" "," "," "," "," "],
-      [" "," "," "," "," "],
-      [" "," "," "," "," "],
+      [" "," ","1"," "," "],
+      [" "," ","1"," "," "],
+      ["1","1"," "," "," "],
       [" "," "," "," "," "],
       [" "," "," "," "," "],
       [" "," "," "," "," "],
@@ -15,6 +16,16 @@ class Quadruple
       [" "," "," "," "," "]
     ]
 
+    @adjacent_methods = [
+      :above,
+      :above_right,
+      :right,
+      :down_right,
+      :down,
+      :down_left,
+      :left,
+      :above_left
+    ]
     @options = [1,2,4,8]
     seed_field(generate_next_up)
   end
@@ -30,9 +41,8 @@ class Quadruple
 
   def update(move)
     @feedback = ""
-    @score += 1
 
-    begin
+    #begin
 
       validate(move)
 
@@ -40,12 +50,33 @@ class Quadruple
       digit = get_digit(r, c)
 
       r, c = to(move)
-      @field[r][c] = digit
+      put_digit(r, c, digit)
+
+      coalesce(r, c)
 
       seed_field(generate_next_up)
 
-    rescue Exception => e
-      @feedback = e.message
+    #rescue Exception => e
+    #  @feedback = e.message
+    #end
+  end
+
+  def coalesce(r, c)
+    adjacent = [[r,c]]
+    digit = @field[r][c]
+    index = 0
+    while index <= adjacent.size - 1
+      ap "-------------- Loop #{adjacent.size} ---------------"
+      adjacent += search(adjacent, index, digit)
+      ap adjacent
+      index += 1
+    end
+
+    if adjacent.size >= 4
+      clear(adjacent)
+      # wip need to compute quadruple and detect cell width
+      @field[r][c] = digit.to_i * 4
+      score(adjacent)
     end
   end
 
@@ -94,8 +125,8 @@ class Quadruple
     digit
   end
 
-  def put_digit(r, c)
-
+  def put_digit(r, c, digit)
+    @field[r][c] = digit
   end
 
   def coordinates(move)
@@ -163,8 +194,8 @@ class Quadruple
     end
   end
 
-  def generate_next_up(n=3)
-    next_up = []
+  def generate_next_up(n=2)
+    next_up = [1]
     n.times { next_up << @options[rand(4)] }
     next_up
   end
@@ -183,5 +214,63 @@ class Quadruple
       is_valid = true
     end
     is_valid
+  end
+
+  def search(adjacent, index, digit)
+    #ap "adjacent for index #{index}"
+    #ap adjacent
+    hits = []
+    r, c = adjacent[index]
+
+    @adjacent_methods.each { |m|
+      x, y = method(m).call r, c
+      if x.between?(0,4) and y.between?(0,8)
+        if @field[x][y].to_s == digit.to_s and
+          adjacent.detect {|coord| coord[0] == x and coord[1] == y} == nil
+          hits << [x, y] 
+        end
+      end
+    }
+    hits
+  end
+
+  def clear(adjacent)
+    adjacent.each{|coord|@field[coord[0]][coord[1]] = " "}
+  end
+
+  def score(adjacent)
+    @score += adjacent.size * 100
+  end
+
+  def above(r, c)
+    [r - 1, c]
+  end
+
+  def above_right(r, c)
+    [r - 1, c + 1]
+  end
+
+  def right(r, c)
+    [r, c + 1]
+  end
+
+  def down_right(r, c)
+    [r + 1, c + 1]
+  end
+
+  def down(r, c)
+    [r + 1, c]
+  end
+
+  def down_left(r, c)
+    [r + 1, c - 1]
+  end
+
+  def left(r, c)
+    [r, c - 1]
+  end
+
+  def above_left(r, c)
+    [r - 1, c - 1]
   end
 end
